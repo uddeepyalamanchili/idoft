@@ -1,0 +1,33 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: SWE 637 Assignment 4 Part 3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: eclipse-ee4j/jersey
+          ref: 2.x
+
+      - name: compile the module where the test is, and all modules it depends on
+        run: mvn clean install -DskipTests -pl incubator/declarative-linking -am
+
+      - name: Run the test to check that it passes without the NonDex tool
+        run: mvn -pl incubator/declarative-linking test -Dtest=org.glassfish.jersey.linking.integration.LinkingTest#orderContainsProvidedLinks
+
+      - name: Run the test with the NonDex tool ( Cloud Run )
+        run: mvn -pl incubator/declarative-linking edu.illinois:nondex-maven-plugin:2.1.1:nondex -Dtest=org.glassfish.jersey.linking.integration.LinkingTest#orderContainsProvidedLinks
